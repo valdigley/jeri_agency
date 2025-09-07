@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  valdigley-site:
+    build: .
+    container_name: valdigley-jericoacoara
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Para SSL certificates (opcional)
+      - ./ssl:/etc/nginx/ssl:ro
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - valdigley-network
+
+  # Opcional: Certbot para SSL automático
+  certbot:
+    image: certbot/certbot
+    container_name: valdigley-certbot
+    volumes:
+      - ./ssl:/etc/letsencrypt
+      - ./www:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email contato@valdigley.com --agree-tos --no-eff-email -d seudominio.com -d www.seudominio.com
+    depends_on:
+      - valdigley-site
+    networks:
+      - valdigley-network
+
+networks:
+  valdigley-network:
+    driver: bridge
